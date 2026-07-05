@@ -9,7 +9,7 @@ import type {
 const BASE_URL =
   (typeof import.meta !== "undefined" &&
     (import.meta as { env?: Record<string, string> }).env?.VITE_API_BASE_URL) ||
-  "https://personal-identity.onrender.com";
+  "http://localhost:8081";
 
 interface ApiEnvelope<T> {
   status: number;

@@ -1,5 +1,5 @@
-import { createFileRoute, Outlet } from "@tanstack/react-router";
-import { Bell, Search } from "lucide-react";
+import { createFileRoute, Outlet, useRouterState } from "@tanstack/react-router";
+import { Bell, Menu, Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AppSidebar } from "@/components/AppSidebar";
 import { getUsername, isValidUsername, setUsername } from "@/lib/session";
@@ -12,11 +12,18 @@ export const Route = createFileRoute("/app")({
 function AppLayout() {
   const [username, setUsernameState] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   useEffect(() => {
     setUsernameState(getUsername());
     setHydrated(true);
   }, []);
+
+  // Auto-close mobile drawer on route change
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [pathname]);
 
   if (hydrated && !username) {
     return <UsernameOnboarding onDone={(u) => setUsernameState(u)} />;
@@ -24,19 +31,26 @@ function AppLayout() {
 
   return (
     <div className="flex min-h-screen bg-background">
-      <AppSidebar />
+      <AppSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-14 items-center justify-between gap-4 border-b border-border bg-background/80 px-6 backdrop-blur">
-          <div className="relative w-full max-w-sm">
+        <header className="flex h-14 items-center gap-2 border-b border-border bg-background/80 px-4 backdrop-blur sm:px-6">
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="rounded-lg border border-border bg-card p-2 text-muted-foreground hover:text-foreground lg:hidden"
+            aria-label="Open menu"
+          >
+            <Menu className="h-4 w-4" />
+          </button>
+          <div className="relative min-w-0 flex-1 sm:max-w-sm">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <input
-              placeholder="Search profiles, cards, links…"
+              placeholder="Search…"
               className="w-full rounded-lg border border-border bg-card py-1.5 pl-9 pr-3 text-sm outline-none placeholder:text-muted-foreground focus:border-primary/60"
             />
           </div>
-          <div className="flex items-center gap-3">
+          <div className="ml-auto flex items-center gap-2 sm:gap-3">
             {username && (
-              <span className="hidden rounded-full border border-border bg-card px-3 py-1 text-xs text-muted-foreground sm:inline">
+              <span className="hidden rounded-full border border-border bg-card px-3 py-1 text-xs text-muted-foreground md:inline">
                 tapme.in/<span className="text-foreground">{username}</span>
               </span>
             )}
@@ -45,7 +59,7 @@ function AppLayout() {
             </button>
           </div>
         </header>
-        <main className="flex-1 overflow-x-hidden p-6">
+        <main className="flex-1 overflow-x-hidden p-4 sm:p-6">
           <Outlet />
         </main>
       </div>

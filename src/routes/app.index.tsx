@@ -64,10 +64,15 @@ function Dashboard() {
 
   const mine = (data ?? []).filter((p) => !username || p.userName === username);
 
+  const publicUrl = username ? `${typeof window !== "undefined" ? window.location.origin : ""}/u/${username}` : "";
+  const qrSrc = publicUrl
+    ? `https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=8&data=${encodeURIComponent(publicUrl)}`
+    : "";
+
   return (
     <div className="mx-auto max-w-5xl">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
           <h1 className="text-2xl font-semibold tracking-tight">My Profiles</h1>
           <p className="text-sm text-muted-foreground">
             Only one profile can be active at a time.
@@ -77,7 +82,7 @@ function Dashboard() {
                 <Link
                   to="/u/$handle"
                   params={{ handle: username }}
-                  className="text-primary underline underline-offset-2"
+                  className="break-all text-primary underline underline-offset-2"
                 >
                   tapme.in/{username}
                 </Link>
@@ -87,15 +92,45 @@ function Dashboard() {
         </div>
         <Link
           to="/app/create"
-          className="inline-flex items-center gap-1.5 rounded-lg bg-gradient-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-glow"
+          className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-gradient-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-glow sm:w-auto"
         >
           <Plus className="h-4 w-4" /> New Profile
         </Link>
       </div>
 
+      {username && (
+        <div className="mb-6 flex flex-col items-center gap-4 rounded-2xl border border-border bg-card p-5 sm:flex-row sm:items-center">
+          <div className="rounded-xl bg-white p-2">
+            <img src={qrSrc} alt="Your profile QR code" className="h-32 w-32" />
+          </div>
+          <div className="min-w-0 flex-1 text-center sm:text-left">
+            <p className="text-sm font-medium">Your unique QR code</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Scan to open your active profile at{" "}
+              <span className="break-all text-foreground">{publicUrl}</span>
+            </p>
+            <div className="mt-3 flex flex-wrap justify-center gap-2 sm:justify-start">
+              <a
+                href={qrSrc}
+                download={`tapme-${username}-qr.png`}
+                className="rounded-lg border border-border px-3 py-1.5 text-xs hover:bg-accent"
+              >
+                Download PNG
+              </a>
+              <button
+                onClick={() => navigator.clipboard?.writeText(publicUrl)}
+                className="rounded-lg border border-border px-3 py-1.5 text-xs hover:bg-accent"
+              >
+                Copy link
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {error && (
         <div className="mb-4 rounded-lg border border-red-500/40 bg-red-500/10 p-3 text-xs text-red-300">
-          Couldn't reach backend. Ensure Spring Boot is running on port 8081.
+          Couldn't reach backend at personal-identity.onrender.com. It may be waking up — retry in a few seconds.
         </div>
       )}
 

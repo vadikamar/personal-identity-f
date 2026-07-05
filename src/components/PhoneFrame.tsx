@@ -11,7 +11,7 @@ export function PhoneFrame({
   screenClassName?: string;
 }) {
   return (
-    <div className={cn("phone-frame w-[320px] shrink-0", className)}>
+    <div className={cn("phone-frame w-full max-w-[320px] shrink-0", className)}>
       <div className={cn("phone-screen bg-white text-neutral-900", screenClassName)}>
         <div className="flex items-center justify-between px-6 pt-3 pb-1 text-[11px] font-medium opacity-70">
           <span>9:41</span>

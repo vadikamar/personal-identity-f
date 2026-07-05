@@ -5,7 +5,7 @@ import { PhoneFrame } from "@/components/PhoneFrame";
 import { ProfileView } from "@/components/ProfileView";
 import { api } from "@/lib/api";
 import { PROFILE_TYPES, type ProfileType } from "@/lib/types";
-import { avatarKeyById, avatarKeyByHandleType, getAvatar } from "@/lib/avatars";
+import { avatarKeyById, avatarKeyByHandle, avatarKeyByHandleType, getAvatar } from "@/lib/avatars";
 
 export const Route = createFileRoute("/u/$handle/$type")({
   loader: ({ params }) => {
@@ -61,6 +61,7 @@ function PublicProfile() {
               avatarUrl={getAvatar(
                 ...(data?.id ? [avatarKeyById(data.id)] : []),
                 avatarKeyByHandleType(handle, type),
+                avatarKeyByHandle(handle),
               )}
             />
           )}

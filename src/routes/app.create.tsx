@@ -10,7 +10,7 @@ import type { Link as ProfileLink, Profile, ProfileRequest, ProfileType } from "
 import { PROFILE_TYPES, PROFILE_TYPE_LABEL } from "@/lib/types";
 import { PROFILE_FIELDS } from "@/lib/profileFields";
 import { getUsername } from "@/lib/session";
-import { avatarKeyById, avatarKeyByHandleType, fileToDataUrl, getAvatar, setAvatar } from "@/lib/avatars";
+import { avatarKeyById, avatarKeyByHandle, avatarKeyByHandleType, fileToDataUrl, getAvatar, setAvatar } from "@/lib/avatars";
 
 type Search = { edit?: string };
 
@@ -85,6 +85,7 @@ function Create() {
     const savedAvatar = getAvatar(
       avatarKeyById(existing.id),
       avatarKeyByHandleType(existing.userName, existing.profileType),
+      avatarKeyByHandle(existing.userName),
     );
     if (savedAvatar) setAvatarDataUrl(savedAvatar);
     setHydrated(true);
@@ -111,6 +112,7 @@ function Create() {
           avatarDataUrl,
           avatarKeyById(saved.id),
           avatarKeyByHandleType(saved.userName, saved.profileType),
+          avatarKeyByHandle(saved.userName),
         );
       }
       qc.invalidateQueries({ queryKey: ["profiles"] });
@@ -347,7 +349,7 @@ function Create() {
 
         {save.error && (
           <p className="mt-3 text-xs text-red-400">
-            Save failed — is the backend running on port 8081?
+            Save failed — the backend may be waking up. Please retry in a moment.
           </p>
         )}
 

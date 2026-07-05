@@ -10,6 +10,9 @@ export function avatarKeyById(id: string) {
 export function avatarKeyByHandleType(handle: string, type: string) {
   return `${PREFIX}u:${handle.toLowerCase()}:${type}`;
 }
+export function avatarKeyByHandle(handle: string) {
+  return `${PREFIX}u:${handle.toLowerCase()}`;
+}
 
 export function getAvatar(...keys: string[]): string | null {
   if (typeof window === "undefined") return null;
