@@ -66,6 +66,8 @@ function Create() {
   const [links, setLinks] = useState<ProfileLink[]>([]);
   const [activateNow, setActivateNow] = useState(false);
   const [avatarDataUrl, setAvatarDataUrl] = useState<string | null>(null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [existingPhotoUrl, setExistingPhotoUrl] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -88,6 +90,7 @@ function Create() {
       avatarKeyByHandle(existing.userName),
     );
     if (savedAvatar) setAvatarDataUrl(savedAvatar);
+    if (existing.photoUrl) setExistingPhotoUrl(existing.photoUrl);
     setHydrated(true);
   }, [isEdit, existing, hydrated]);
 
@@ -104,8 +107,23 @@ function Create() {
   }, [type]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const save = useMutation({
-    mutationFn: (body: ProfileRequest) =>
-      isEdit && editId ? api.updateProfile(editId, body) : api.createProfile(body),
+    mutationFn: async (body: ProfileRequest) => {
+      const saved =
+        isEdit && editId
+          ? await api.updateProfile(editId, body)
+          : await api.createProfile(body);
+      if (avatarFile && saved?.id) {
+        try {
+          const withPhoto = await api.uploadProfilePhoto(saved.id, avatarFile);
+          return withPhoto;
+        } catch (err) {
+          console.error("Photo upload failed", err);
+          alert("Profile saved, but photo upload failed. You can retry from Edit.");
+          return saved;
+        }
+      }
+      return saved;
+    },
     onSuccess: (saved) => {
       if (avatarDataUrl && saved?.id) {
         setAvatar(
@@ -117,6 +135,7 @@ function Create() {
       }
       qc.invalidateQueries({ queryKey: ["profiles"] });
       qc.invalidateQueries({ queryKey: ["profile", saved?.id] });
+      qc.invalidateQueries({ queryKey: ["public-profile", saved?.userName] });
       navigate({ to: "/app" });
     },
   });
@@ -130,13 +149,14 @@ function Create() {
       headline: spec.showHeadline ? headline : undefined,
       bio: spec.bioLabel ? bio : undefined,
       theme,
+      photoUrl: !avatarDataUrl && existingPhotoUrl ? existingPhotoUrl : undefined,
       active: false,
       interests: spec.interestsLabel
         ? interestsText.split(",").map((s) => s.trim()).filter(Boolean)
         : undefined,
       links: links.filter((l) => l.url.trim() !== ""),
     }),
-    [type, username, displayName, headline, bio, theme, interestsText, links, spec],
+    [type, username, displayName, headline, bio, theme, interestsText, links, spec, avatarDataUrl, existingPhotoUrl],
   );
 
   const onPickAvatar = async (file: File | null | undefined) => {
@@ -147,6 +167,7 @@ function Create() {
     }
     const url = await fileToDataUrl(file);
     setAvatarDataUrl(url);
+    setAvatarFile(file);
   };
 
   const submit = () => {
@@ -207,8 +228,8 @@ function Create() {
         <Field label="Profile Photo">
           <div className="flex items-center gap-4">
             <div className="h-16 w-16 shrink-0 overflow-hidden rounded-full border border-border bg-muted">
-              {avatarDataUrl ? (
-                <img src={avatarDataUrl} alt="avatar" className="h-full w-full object-cover" />
+              {avatarDataUrl || existingPhotoUrl ? (
+                <img src={avatarDataUrl ?? existingPhotoUrl ?? ""} alt="avatar" className="h-full w-full object-cover" />
               ) : (
                 <div className="flex h-full w-full items-center justify-center text-[10px] text-muted-foreground">
                   No photo
@@ -227,19 +248,27 @@ function Create() {
               onClick={() => fileRef.current?.click()}
               className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs hover:bg-accent"
             >
-              <Upload className="h-3.5 w-3.5" /> Upload photo
+              <Upload className="h-3.5 w-3.5" />
+              {avatarDataUrl || existingPhotoUrl ? "Change photo" : "Upload photo"}
             </button>
-            {avatarDataUrl && (
+            {(avatarDataUrl || avatarFile) && (
               <button
                 type="button"
-                onClick={() => setAvatarDataUrl(null)}
+                onClick={() => {
+                  setAvatarDataUrl(null);
+                  setAvatarFile(null);
+                }}
                 className="text-xs text-muted-foreground hover:text-foreground"
               >
                 Remove
               </button>
             )}
           </div>
+          <p className="mt-2 text-[11px] text-muted-foreground">
+            Photo is uploaded to the server after saving and shown on your public profile.
+          </p>
         </Field>
+
 
 
         <Field label="Profile Name">

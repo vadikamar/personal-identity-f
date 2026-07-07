@@ -8,6 +8,7 @@ import {
   Music,
   Image as ImageIcon,
   Ghost,
+  FileText,
 } from "lucide-react";
 
 const map = {
@@ -21,9 +22,10 @@ const map = {
   music: Music,
   photos: ImageIcon,
   snapchat: Ghost,
+  resume: FileText,
 } as const;
 
 export function ProfileIcon({ name, className }: { name: keyof typeof map; className?: string }) {
-  const Icon = map[name] ?? Mail;
+  const Icon = map[name as keyof typeof map] ?? Mail;
   return <Icon className={className} />;
 }

@@ -31,7 +31,8 @@ export type LinkIcon =
   | "spotify"
   | "photos"
   | "music"
-  | "snapchat";
+  | "snapchat"
+  | "resume";
 
 export interface Link {
   label: string;
@@ -48,6 +49,7 @@ export interface Profile {
   headline?: string;
   bio?: string;
   theme?: string;
+  photoUrl?: string;
   active: boolean;
   interests?: string[];
   links?: Link[];
@@ -62,6 +64,7 @@ export interface ProfileRequest {
   headline?: string;
   bio?: string;
   theme?: string;
+  photoUrl?: string;
   active: boolean;
   interests?: string[];
   links?: Link[];

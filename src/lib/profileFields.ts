@@ -17,6 +17,7 @@ export const PROFILE_FIELDS: Record<ProfileType, FieldSpec> = {
       { icon: "call", label: "Call", placeholder: "tel:+911234567890" },
       { icon: "linkedin", label: "LinkedIn", placeholder: "https://linkedin.com/in/you" },
       { icon: "github", label: "GitHub", placeholder: "https://github.com/you" },
+      { icon: "resume", label: "Resume", placeholder: "https://drive.google.com/…/resume.pdf" },
     ],
   },
   "just-met": {

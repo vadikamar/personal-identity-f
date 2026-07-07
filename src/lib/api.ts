@@ -9,7 +9,7 @@ import type {
 const BASE_URL =
   (typeof import.meta !== "undefined" &&
     (import.meta as { env?: Record<string, string> }).env?.VITE_API_BASE_URL) ||
-  "http://localhost:8081";
+  "https://personal-identity.onrender.com";
 
 interface ApiEnvelope<T> {
   status: number;
@@ -67,6 +67,20 @@ export const api = {
     request<Profile>(`/api/profiles/${id}/activate`, { method: "POST" }),
   deactivateProfile: (id: string) =>
     request<Profile>(`/api/profiles/${id}/deactivate`, { method: "POST" }),
+  uploadProfilePhoto: async (id: string, file: File): Promise<Profile> => {
+    const form = new FormData();
+    form.append("file", file);
+    const res = await fetch(`${BASE_URL}/api/profiles/${id}/photo`, {
+      method: "POST",
+      body: form,
+    });
+    if (!res.ok) {
+      const text = await res.text().catch(() => res.statusText);
+      throw new Error(`Upload ${res.status}: ${text}`);
+    }
+    const body = (await res.json()) as ApiEnvelope<Profile>;
+    return body.data;
+  },
 
   // Cards
   listCards: () => request<NfcCard[]>("/api/cards"),

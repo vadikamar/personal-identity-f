@@ -95,7 +95,15 @@ export function ProfileView({
           url: "#",
         }));
   const ctaLabel = mockProfiles[activeType].ctaLabel;
-  const avatarSrc = avatarUrl || mockUser.avatar;
+  const avatarSrc = data?.photoUrl || avatarUrl || mockUser.avatar;
+
+  // For professional CTA "View Resume": find a resume link.
+  const resumeLink =
+    activeType === "professional"
+      ? (data?.links ?? []).find(
+          (l) => l.icon === "resume" || /resume|cv/i.test(l.label),
+        )
+      : undefined;
 
   // Theme color override: `data.theme` is a raw CSS color (oklch/hex/etc).
   // We build an inline gradient + accent styles so the user's choice is
@@ -178,12 +186,34 @@ export function ProfileView({
       )}
 
       {!isSos && (
-        <button
-          className={cn("mt-6 w-full rounded-xl py-3 text-sm font-semibold shadow-md", !hasCustom && t.cta)}
-          style={ctaStyle}
-        >
-          {ctaLabel}
-        </button>
+        resumeLink?.url ? (
+          <a
+            href={resumeLink.url}
+            target="_blank"
+            rel="noreferrer"
+            className={cn(
+              "mt-6 block w-full rounded-xl py-3 text-center text-sm font-semibold shadow-md",
+              !hasCustom && t.cta,
+            )}
+            style={ctaStyle}
+          >
+            {ctaLabel}
+          </a>
+        ) : (
+          <button
+            type="button"
+            disabled={activeType === "professional"}
+            className={cn(
+              "mt-6 w-full rounded-xl py-3 text-sm font-semibold shadow-md",
+              !hasCustom && t.cta,
+              activeType === "professional" && "opacity-60 cursor-not-allowed",
+            )}
+            style={ctaStyle}
+            title={activeType === "professional" ? "Add a Resume link to enable this" : undefined}
+          >
+            {ctaLabel}
+          </button>
+        )
       )}
 
       {bio && activeType !== "friends" && activeType !== "sos" && (
