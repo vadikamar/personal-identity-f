@@ -93,6 +93,15 @@ export const api = {
       method: "POST",
       body: JSON.stringify(body),
     }),
+  updatePost: (profileId: string, postId: string, body: ProfilePostRequest) =>
+    request<ProfilePost>(`/api/profiles/${profileId}/posts/${postId}`, {
+      method: "PUT",
+      body: JSON.stringify(body),
+    }),
+  deletePost: (profileId: string, postId: string) =>
+    request<void>(`/api/profiles/${profileId}/posts/${postId}`, {
+      method: "DELETE",
+    }),
 
   // Cards
   listCards: () => request<NfcCard[]>("/api/cards"),
