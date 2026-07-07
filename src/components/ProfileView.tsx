@@ -3,7 +3,9 @@ import { profiles as mockProfiles, emergency, user as mockUser } from "@/lib/moc
 import type { ProfileKey } from "@/lib/mock";
 import type { Profile, ProfilePost, ProfileType } from "@/lib/types";
 import { ProfileIcon } from "./ProfileIcon";
-import { Image as ImageIcon } from "lucide-react";
+import { Image as ImageIcon, X } from "lucide-react";
+import { useState, useEffect } from "react";
+
 
 type Theme = {
   bg: string;
@@ -84,6 +86,22 @@ export function ProfileView({
     "professional";
   const t = themes[activeType];
   const isSos = activeType === "sos";
+  const [activePost, setActivePost] = useState<ProfilePost | null>(null);
+
+  useEffect(() => {
+    if (!activePost) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setActivePost(null);
+    };
+    window.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [activePost]);
+
 
   const displayName = data?.displayName ?? mockUser.name;
   const headline = data?.headline ?? mockProfiles[activeType].headline;
@@ -250,10 +268,12 @@ export function ProfileView({
           <p className="mb-2 text-sm font-semibold">Posts</p>
           <div className="grid grid-cols-3 gap-2">
             {posts.slice(0, 6).map((p) => (
-              <div
+              <button
+                type="button"
                 key={p.id}
+                onClick={() => setActivePost(p)}
                 className={cn(
-                  "overflow-hidden rounded-lg",
+                  "group overflow-hidden rounded-lg text-left transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-white/50",
                   !hasCustom && t.card,
                 )}
                 style={chipStyle}
@@ -263,7 +283,7 @@ export function ProfileView({
                     <img
                       src={p.photoUrl}
                       alt={p.description}
-                      className="h-full w-full object-cover"
+                      className="h-full w-full object-cover transition group-hover:scale-105"
                     />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center">
@@ -276,11 +296,53 @@ export function ProfileView({
                     {p.description}
                   </p>
                 )}
-              </div>
+              </button>
             ))}
           </div>
         </div>
       )}
+
+      {activePost && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm"
+          onClick={() => setActivePost(null)}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div
+            className="relative flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-white text-neutral-900 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setActivePost(null)}
+              className="absolute right-3 top-3 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80"
+              aria-label="Close"
+            >
+              <X className="h-5 w-5" />
+            </button>
+            {activePost.photoUrl ? (
+              <img
+                src={activePost.photoUrl}
+                alt={activePost.description}
+                className="max-h-[65vh] w-full object-contain bg-black"
+              />
+            ) : (
+              <div className="flex aspect-square w-full items-center justify-center bg-neutral-100">
+                <ImageIcon className="h-10 w-10 text-neutral-400" />
+              </div>
+            )}
+            {activePost.description && (
+              <div className="overflow-y-auto p-4">
+                <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                  {activePost.description}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
 
       {isSos && (
         <>
