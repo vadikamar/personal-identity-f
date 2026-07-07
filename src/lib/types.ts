@@ -88,6 +88,20 @@ export interface NfcCardRequest {
   assignedProfile?: string;
 }
 
+export interface ProfilePost {
+  id: string;
+  description: string;
+  photoUrl: string;
+  createdAt?: string;
+}
+
+export interface ProfilePostRequest {
+  description: string;
+  photoUrl: string;
+}
+
+export const MAX_POSTS_PER_PROFILE = 5;
+
 export interface ProfileLinkMetric {
   label: string;
   url: string;

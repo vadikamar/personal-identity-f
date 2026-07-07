@@ -1,8 +1,9 @@
 import { cn } from "@/lib/utils";
 import { profiles as mockProfiles, emergency, user as mockUser } from "@/lib/mock";
 import type { ProfileKey } from "@/lib/mock";
-import type { Profile, ProfileType } from "@/lib/types";
+import type { Profile, ProfilePost, ProfileType } from "@/lib/types";
 import { ProfileIcon } from "./ProfileIcon";
+import { Image as ImageIcon } from "lucide-react";
 
 type Theme = {
   bg: string;
@@ -70,10 +71,12 @@ export function ProfileView({
   type,
   data,
   avatarUrl,
+  posts,
 }: {
   type?: ProfileType | ProfileKey;
   data?: Profile;
   avatarUrl?: string | null;
+  posts?: ProfilePost[];
 }) {
   const activeType: ProfileType =
     (data?.profileType as ProfileType) ??
@@ -237,6 +240,43 @@ export function ProfileView({
               >
                 {i}
               </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {!isSos && posts && posts.length > 0 && (
+        <div className="mt-6">
+          <p className="mb-2 text-sm font-semibold">Posts</p>
+          <div className="grid grid-cols-3 gap-2">
+            {posts.slice(0, 6).map((p) => (
+              <div
+                key={p.id}
+                className={cn(
+                  "overflow-hidden rounded-lg",
+                  !hasCustom && t.card,
+                )}
+                style={chipStyle}
+              >
+                <div className="aspect-square w-full bg-black/10">
+                  {p.photoUrl ? (
+                    <img
+                      src={p.photoUrl}
+                      alt={p.description}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center">
+                      <ImageIcon className="h-4 w-4 opacity-60" />
+                    </div>
+                  )}
+                </div>
+                {p.description && (
+                  <p className={cn("line-clamp-2 px-1.5 py-1 text-[9px] leading-snug", t.sub)}>
+                    {p.description}
+                  </p>
+                )}
+              </div>
             ))}
           </div>
         </div>

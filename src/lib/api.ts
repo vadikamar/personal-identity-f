@@ -3,6 +3,8 @@ import type {
   NfcCard,
   NfcCardRequest,
   Profile,
+  ProfilePost,
+  ProfilePostRequest,
   ProfileRequest,
 } from "./types";
 
@@ -81,6 +83,16 @@ export const api = {
     const body = (await res.json()) as ApiEnvelope<Profile>;
     return body.data;
   },
+
+
+  // Posts
+  listPosts: (profileId: string) =>
+    request<ProfilePost[]>(`/api/profiles/${profileId}/posts`),
+  addPost: (profileId: string, body: ProfilePostRequest) =>
+    request<Profile>(`/api/profiles/${profileId}/posts`, {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
 
   // Cards
   listCards: () => request<NfcCard[]>("/api/cards"),

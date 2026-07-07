@@ -36,6 +36,14 @@ function PublicProfile() {
     refetchOnWindowFocus: false,
   });
 
+  const { data: posts } = useQuery({
+    queryKey: ["posts", data?.id],
+    queryFn: () => api.listPosts(data!.id),
+    enabled: !!data?.id,
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
+
   const onBack = () => {
     if (typeof window !== "undefined" && window.history.length > 1) {
       window.history.back();
@@ -66,6 +74,7 @@ function PublicProfile() {
             <ProfileView
               type={type as ProfileType}
               data={data ?? undefined}
+              posts={posts ?? undefined}
               avatarUrl={
                 data?.photoUrl ||
                 getAvatar(

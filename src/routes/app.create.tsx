@@ -11,6 +11,7 @@ import { PROFILE_TYPES, PROFILE_TYPE_LABEL } from "@/lib/types";
 import { PROFILE_FIELDS } from "@/lib/profileFields";
 import { getUsername } from "@/lib/session";
 import { avatarKeyById, avatarKeyByHandle, avatarKeyByHandleType, fileToDataUrl, getAvatar, setAvatar } from "@/lib/avatars";
+import { PostsManager } from "@/components/PostsManager";
 
 type Search = { edit?: string };
 
@@ -195,6 +196,7 @@ function Create() {
 
   return (
     <div className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-[1.2fr_1fr]">
+      <div className="flex flex-col gap-6">
       <div className="rounded-2xl border border-border bg-card p-6">
         <h1 className="text-xl font-semibold tracking-tight">
           {isEdit ? "Edit Profile" : "Create Profile"}
@@ -398,6 +400,11 @@ function Create() {
           </button>
         </div>
       </div>
+
+      {isEdit && editId && <PostsManager profileId={editId} />}
+      </div>
+
+
 
       <div className="flex flex-col items-center gap-3">
         <p className="text-xs uppercase tracking-widest text-muted-foreground">Live preview</p>
