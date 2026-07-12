@@ -111,6 +111,7 @@ function PublicProfile() {
             <Link
               to="/u/$handle/request"
               params={{ handle }}
+              search={{ type }}
               className="flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-foreground shadow-sm hover:bg-accent"
             >
               <KeyRound className="h-4 w-4" />

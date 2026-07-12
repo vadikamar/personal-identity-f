@@ -13,15 +13,21 @@ import {
   Send,
   Users,
 } from "lucide-react";
+import { z } from "zod";
 import { api, ApiError } from "@/lib/api";
 import { PROFILE_TYPE_LABEL, type Profile, type ProfileType } from "@/lib/types";
 import { getUsername, isSignedIn } from "@/lib/session";
 import { cn } from "@/lib/utils";
 
+const searchSchema = z.object({
+  type: z.string().optional(),
+});
+
 export const Route = createFileRoute("/u/$handle/request")({
   head: ({ params }) => ({
     meta: [{ title: `Request access — @${params.handle}` }],
   }),
+  validateSearch: (search) => searchSchema.parse(search),
   component: RequestAccessPage,
 });
 
@@ -43,6 +49,7 @@ const tints: Record<ProfileType, string> = {
 
 function RequestAccessPage() {
   const { handle } = Route.useParams();
+  const { type } = Route.useSearch();
   const navigate = useNavigate();
   const [hydrated, setHydrated] = useState(false);
   const [me, setMe] = useState<string | null>(null);
@@ -55,13 +62,17 @@ function RequestAccessPage() {
     if (!isSignedIn()) {
       navigate({
         to: "/auth",
-        search: { redirect: `/u/${handle}/request` },
+        search: {
+          redirect: type
+            ? `/u/${handle}/request?type=${type}`
+            : `/u/${handle}/request`,
+        },
       });
       return;
     }
     setMe(getUsername());
     setHydrated(true);
-  }, [handle, navigate]);
+  }, [handle, type, navigate]);
 
   const { data: profiles, isLoading, error: loadErr } = useQuery({
     queryKey: ["profiles"],
@@ -161,6 +172,10 @@ function RequestAccessPage() {
               const Icon = iconFor[p.profileType] ?? Briefcase;
               const isSelected = selected?.id === p.id;
               const isDone = submitted === p.id;
+              const isCurrentVisible = type === p.profileType;
+              const isAccess =
+                isCurrentVisible &&
+                p.authorizedViewerUsernames?.includes(me ?? "");
               return (
                 <button
                   key={p.id}
@@ -199,7 +214,7 @@ function RequestAccessPage() {
                     <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-medium text-emerald-600">
                       <Check className="h-3 w-3" /> Sent
                     </span>
-                  ) : p.authorizedViewerUsernames?.includes(me ?? "") ? (
+                  ) : isAccess ? (
                     <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-medium text-emerald-600">
                       <Check className="h-3 w-3" /> Access
                     </span>
