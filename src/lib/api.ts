@@ -3,6 +3,8 @@ import type {
   NfcCard,
   NfcCardRequest,
   Profile,
+  ProfileAccessCreateRequest,
+  ProfileAccessRequest,
   ProfilePost,
   ProfilePostRequest,
   ProfileRequest,
@@ -180,6 +182,48 @@ export const api = {
     request<VisitorLocation[]>(
       `/api/profiles/${encodeURIComponent(username)}/visitor-locations`,
     ),
+
+  // Profile access requests
+  requestProfileAccess: (ownerProfileId: string, body: ProfileAccessCreateRequest) =>
+    request<ProfileAccessRequest>(
+      `/api/profiles/${encodeURIComponent(ownerProfileId)}/access-requests`,
+      { method: "POST", body: JSON.stringify(body) },
+    ),
+  listPendingAccessRequests: () =>
+    request<ProfileAccessRequest[]>("/api/profiles/dashboard/access-requests"),
+  approveAccessRequest: (requestId: string) =>
+    request<ProfileAccessRequest>(
+      `/api/profiles/access-requests/${encodeURIComponent(requestId)}/approve`,
+      { method: "POST" },
+    ),
+  rejectAccessRequest: (requestId: string) =>
+    request<ProfileAccessRequest>(
+      `/api/profiles/access-requests/${encodeURIComponent(requestId)}/reject`,
+      { method: "POST" },
+    ),
+  viewAuthorizedProfile: (username: string) =>
+    request<Profile | null>(
+      `/api/profiles/${encodeURIComponent(username)}/view`,
+    ),
+
+  // Resolves the best profile to display for the given handle.
+  // Signed-in viewers: try the authorized `/view` endpoint first (may return
+  // a profile approved specifically for the requester), fall back to the
+  // public endpoint. Signed-out viewers always use the public endpoint.
+  resolveViewableProfile: async (
+    username: string,
+    signedIn: boolean,
+  ): Promise<Profile | null> => {
+    if (signedIn) {
+      try {
+        const authorized = await api.viewAuthorizedProfile(username);
+        if (authorized) return authorized;
+      } catch {
+        // fall through to public endpoint
+      }
+    }
+    return api.getProfileByUsername(username);
+  },
 };
 
 export { BASE_URL };

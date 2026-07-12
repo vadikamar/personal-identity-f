@@ -1,11 +1,13 @@
 import { createFileRoute, Link, notFound, useRouter } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, KeyRound } from "lucide-react";
 import { PhoneFrame } from "@/components/PhoneFrame";
 import { ProfileView } from "@/components/ProfileView";
 import { api } from "@/lib/api";
 import { PROFILE_TYPES, type ProfileType } from "@/lib/types";
 import { avatarKeyById, avatarKeyByHandle, avatarKeyByHandleType, getAvatar } from "@/lib/avatars";
+import { getUsername, isSignedIn } from "@/lib/session";
+import { useEffect, useState } from "react";
 
 export const Route = createFileRoute("/u/$handle/$type")({
   loader: ({ params }) => {
@@ -29,9 +31,20 @@ export const Route = createFileRoute("/u/$handle/$type")({
 function PublicProfile() {
   const { handle, type } = Route.useParams();
   const router = useRouter();
+
+  const [hydrated, setHydrated] = useState(false);
+  const [me, setMe] = useState<string | null>(null);
+  const [signedIn, setSignedIn] = useState(false);
+  useEffect(() => {
+    setSignedIn(isSignedIn());
+    setMe(getUsername());
+    setHydrated(true);
+  }, []);
+
   const { data, isLoading } = useQuery({
-    queryKey: ["public-profile", handle],
-    queryFn: () => api.getProfileByUsername(handle),
+    queryKey: ["viewable-profile", handle, signedIn],
+    queryFn: () => api.resolveViewableProfile(handle, signedIn),
+    enabled: hydrated,
     retry: false,
     refetchOnWindowFocus: false,
   });
@@ -51,6 +64,9 @@ function PublicProfile() {
       router.navigate({ to: "/" });
     }
   };
+
+  const canRequestMore = me !== handle;
+
 
   return (
     <div className="min-h-screen bg-hero px-4 py-8">
@@ -88,6 +104,34 @@ function PublicProfile() {
           )}
         </PhoneFrame>
       </div>
+
+      {canRequestMore && (
+        <div className="mx-auto mt-6 max-w-sm">
+          {signedIn ? (
+            <Link
+              to="/u/$handle/request"
+              params={{ handle }}
+              className="flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-foreground shadow-sm hover:bg-accent"
+            >
+              <KeyRound className="h-4 w-4" />
+              Request access to more profiles
+            </Link>
+          ) : (
+            <Link
+              to="/auth"
+              search={{ redirect: `/u/${handle}/${type}` }}
+              className="flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-foreground shadow-sm hover:bg-accent"
+            >
+              <KeyRound className="h-4 w-4" />
+              Sign in to unlock more
+            </Link>
+          )}
+          <p className="mt-2 text-center text-[11px] text-muted-foreground">
+            Ask @{handle} to unlock their other profiles for you.
+          </p>
+
+        </div>
+      )}
     </div>
   );
 }

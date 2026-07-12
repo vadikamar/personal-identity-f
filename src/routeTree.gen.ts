@@ -15,11 +15,13 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as UHandleRouteImport } from './routes/u.$handle'
 import { Route as AppSettingsRouteImport } from './routes/app.settings'
+import { Route as AppRequestsRouteImport } from './routes/app.requests'
 import { Route as AppProfilesRouteImport } from './routes/app.profiles'
 import { Route as AppCreateRouteImport } from './routes/app.create'
 import { Route as AppCardsRouteImport } from './routes/app.cards'
 import { Route as AppBillingRouteImport } from './routes/app.billing'
 import { Route as AppAnalyticsRouteImport } from './routes/app.analytics'
+import { Route as UHandleRequestRouteImport } from './routes/u.$handle.request'
 import { Route as UHandleTypeRouteImport } from './routes/u.$handle.$type'
 
 const AuthRoute = AuthRouteImport.update({
@@ -52,6 +54,11 @@ const AppSettingsRoute = AppSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AppRoute,
 } as any)
+const AppRequestsRoute = AppRequestsRouteImport.update({
+  id: '/requests',
+  path: '/requests',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppProfilesRoute = AppProfilesRouteImport.update({
   id: '/profiles',
   path: '/profiles',
@@ -77,6 +84,11 @@ const AppAnalyticsRoute = AppAnalyticsRouteImport.update({
   path: '/analytics',
   getParentRoute: () => AppRoute,
 } as any)
+const UHandleRequestRoute = UHandleRequestRouteImport.update({
+  id: '/request',
+  path: '/request',
+  getParentRoute: () => UHandleRoute,
+} as any)
 const UHandleTypeRoute = UHandleTypeRouteImport.update({
   id: '/$type',
   path: '/$type',
@@ -92,10 +104,12 @@ export interface FileRoutesByFullPath {
   '/app/cards': typeof AppCardsRoute
   '/app/create': typeof AppCreateRoute
   '/app/profiles': typeof AppProfilesRoute
+  '/app/requests': typeof AppRequestsRoute
   '/app/settings': typeof AppSettingsRoute
   '/u/$handle': typeof UHandleRouteWithChildren
   '/app/': typeof AppIndexRoute
   '/u/$handle/$type': typeof UHandleTypeRoute
+  '/u/$handle/request': typeof UHandleRequestRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -105,10 +119,12 @@ export interface FileRoutesByTo {
   '/app/cards': typeof AppCardsRoute
   '/app/create': typeof AppCreateRoute
   '/app/profiles': typeof AppProfilesRoute
+  '/app/requests': typeof AppRequestsRoute
   '/app/settings': typeof AppSettingsRoute
   '/u/$handle': typeof UHandleRouteWithChildren
   '/app': typeof AppIndexRoute
   '/u/$handle/$type': typeof UHandleTypeRoute
+  '/u/$handle/request': typeof UHandleRequestRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -120,10 +136,12 @@ export interface FileRoutesById {
   '/app/cards': typeof AppCardsRoute
   '/app/create': typeof AppCreateRoute
   '/app/profiles': typeof AppProfilesRoute
+  '/app/requests': typeof AppRequestsRoute
   '/app/settings': typeof AppSettingsRoute
   '/u/$handle': typeof UHandleRouteWithChildren
   '/app/': typeof AppIndexRoute
   '/u/$handle/$type': typeof UHandleTypeRoute
+  '/u/$handle/request': typeof UHandleRequestRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -136,10 +154,12 @@ export interface FileRouteTypes {
     | '/app/cards'
     | '/app/create'
     | '/app/profiles'
+    | '/app/requests'
     | '/app/settings'
     | '/u/$handle'
     | '/app/'
     | '/u/$handle/$type'
+    | '/u/$handle/request'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -149,10 +169,12 @@ export interface FileRouteTypes {
     | '/app/cards'
     | '/app/create'
     | '/app/profiles'
+    | '/app/requests'
     | '/app/settings'
     | '/u/$handle'
     | '/app'
     | '/u/$handle/$type'
+    | '/u/$handle/request'
   id:
     | '__root__'
     | '/'
@@ -163,10 +185,12 @@ export interface FileRouteTypes {
     | '/app/cards'
     | '/app/create'
     | '/app/profiles'
+    | '/app/requests'
     | '/app/settings'
     | '/u/$handle'
     | '/app/'
     | '/u/$handle/$type'
+    | '/u/$handle/request'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -220,6 +244,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSettingsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/requests': {
+      id: '/app/requests'
+      path: '/requests'
+      fullPath: '/app/requests'
+      preLoaderRoute: typeof AppRequestsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/profiles': {
       id: '/app/profiles'
       path: '/profiles'
@@ -255,6 +286,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAnalyticsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/u/$handle/request': {
+      id: '/u/$handle/request'
+      path: '/request'
+      fullPath: '/u/$handle/request'
+      preLoaderRoute: typeof UHandleRequestRouteImport
+      parentRoute: typeof UHandleRoute
+    }
     '/u/$handle/$type': {
       id: '/u/$handle/$type'
       path: '/$type'
@@ -271,6 +309,7 @@ interface AppRouteChildren {
   AppCardsRoute: typeof AppCardsRoute
   AppCreateRoute: typeof AppCreateRoute
   AppProfilesRoute: typeof AppProfilesRoute
+  AppRequestsRoute: typeof AppRequestsRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppIndexRoute: typeof AppIndexRoute
 }
@@ -281,6 +320,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppCardsRoute: AppCardsRoute,
   AppCreateRoute: AppCreateRoute,
   AppProfilesRoute: AppProfilesRoute,
+  AppRequestsRoute: AppRequestsRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppIndexRoute: AppIndexRoute,
 }
@@ -289,10 +329,12 @@ const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 interface UHandleRouteChildren {
   UHandleTypeRoute: typeof UHandleTypeRoute
+  UHandleRequestRoute: typeof UHandleRequestRoute
 }
 
 const UHandleRouteChildren: UHandleRouteChildren = {
   UHandleTypeRoute: UHandleTypeRoute,
+  UHandleRequestRoute: UHandleRequestRoute,
 }
 
 const UHandleRouteWithChildren =

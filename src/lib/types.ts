@@ -53,8 +53,26 @@ export interface Profile {
   active: boolean;
   interests?: string[];
   links?: Link[];
+  authorizedViewerUsernames?: string[];
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface ProfileAccessRequest {
+  id: string;
+  ownerProfileId: string;
+  ownerUsername: string;
+  requesterUsername: string;
+  requestedProfileId: string;
+  message?: string;
+  status: "PENDING" | "APPROVED" | "REJECTED" | string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface ProfileAccessCreateRequest {
+  requestedProfileId: string;
+  message?: string;
 }
 
 export interface ProfileRequest {

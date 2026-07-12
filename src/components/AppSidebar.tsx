@@ -8,6 +8,7 @@ import {
   Receipt,
   Sparkles,
   X,
+  Inbox,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { user } from "@/lib/mock";
@@ -15,6 +16,7 @@ import { user } from "@/lib/mock";
 const items = [
   { to: "/app", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { to: "/app/profiles", label: "My Profiles", icon: User },
+  { to: "/app/requests", label: "Access Requests", icon: Inbox },
   { to: "/app/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/app/cards", label: "NFC Cards", icon: CreditCard },
   { to: "/app/settings", label: "Settings", icon: Settings },
