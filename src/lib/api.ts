@@ -22,6 +22,20 @@ interface ApiEnvelope<T> {
   data: T;
 }
 
+export class ApiError extends Error {
+  status: number;
+  constructor(status: number, message: string) {
+    super(message);
+    this.status = status;
+  }
+}
+
+function authHeaders(): Record<string, string> {
+  if (typeof window === "undefined") return {};
+  const token = window.localStorage.getItem("tapme.basicauth");
+  return token ? { Authorization: token } : {};
+}
+
 async function request<T>(
   path: string,
   init?: RequestInit,
@@ -30,6 +44,7 @@ async function request<T>(
     ...init,
     headers: {
       "Content-Type": "application/json",
+      ...authHeaders(),
       ...(init?.headers ?? {}),
     },
   });
@@ -39,8 +54,21 @@ async function request<T>(
   }
   if (!res.ok) {
     const text = await res.text().catch(() => res.statusText);
-    throw new Error(`API ${res.status}: ${text}`);
+    // Global session expiry: clear creds and bounce to /auth for non-auth calls.
+    if (
+      res.status === 401 &&
+      typeof window !== "undefined" &&
+      !path.startsWith("/api/auth/")
+    ) {
+      window.localStorage.removeItem("tapme.basicauth");
+      const here = window.location.pathname + window.location.search;
+      if (!window.location.pathname.startsWith("/auth")) {
+        window.location.replace(`/auth?redirect=${encodeURIComponent(here)}`);
+      }
+    }
+    throw new ApiError(res.status, text || res.statusText);
   }
+
   if (res.status === 204) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return undefined as any;
@@ -48,6 +76,7 @@ async function request<T>(
   const body = (await res.json()) as ApiEnvelope<T>;
   return body.data;
 }
+
 
 export const api = {
   // Profiles
@@ -76,15 +105,35 @@ export const api = {
     form.append("file", file);
     const res = await fetch(`${BASE_URL}/api/profiles/${id}/photo`, {
       method: "POST",
+      headers: { ...authHeaders() },
       body: form,
     });
     if (!res.ok) {
       const text = await res.text().catch(() => res.statusText);
-      throw new Error(`Upload ${res.status}: ${text}`);
+      throw new ApiError(res.status, text || res.statusText);
     }
     const body = (await res.json()) as ApiEnvelope<Profile>;
     return body.data;
   },
+
+  // Auth
+  signUp: (username: string, password: string) =>
+    request<string>("/api/auth/sign-up", {
+      method: "POST",
+      body: JSON.stringify({ username, password }),
+    }),
+  signIn: (username: string, password: string) =>
+    request<string>("/api/auth/sign-in", {
+      method: "POST",
+      body: JSON.stringify({ username, password }),
+    }),
+  signOut: () => request<string>("/api/auth/sign-out", { method: "POST" }),
+  updatePassword: (username: string, password: string, newPassword: string) =>
+    request<string>("/api/auth/password-update", {
+      method: "POST",
+      body: JSON.stringify({ username, password, newPassword }),
+    }),
+
 
 
   // Posts
