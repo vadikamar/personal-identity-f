@@ -102,6 +102,24 @@ export interface ProfilePostRequest {
 
 export const MAX_POSTS_PER_PROFILE = 5;
 
+export interface VisitorLocation {
+  id: string;
+  latitude: number;
+  longitude: number;
+  city?: string;
+  country?: string;
+  address?: string;
+  visitedAt?: string;
+}
+
+export interface VisitorLocationRequest {
+  latitude: number;
+  longitude: number;
+  city?: string;
+  country?: string;
+  address?: string;
+}
+
 export interface ProfileLinkMetric {
   label: string;
   url: string;

@@ -75,6 +75,7 @@ function PublicProfile() {
               type={type as ProfileType}
               data={data ?? undefined}
               posts={posts ?? undefined}
+              handle={handle}
               avatarUrl={
                 data?.photoUrl ||
                 getAvatar(

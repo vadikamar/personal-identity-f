@@ -144,12 +144,16 @@ function Dashboard() {
         ) : (
           mine.map((p, i) => {
             const Icon = icons[p.profileType] ?? Briefcase;
+            const busy =
+              (activate.isPending && activate.variables === p.id) ||
+              (deactivate.isPending && deactivate.variables === p.id);
             return (
               <ProfileRow
                 key={p.id}
                 p={p}
                 Icon={Icon}
                 first={i === 0}
+                busy={busy}
                 onActivate={() => activate.mutate(p.id)}
                 onDeactivate={() => deactivate.mutate(p.id)}
                 onDelete={() => {
@@ -168,6 +172,7 @@ function ProfileRow({
   p,
   Icon,
   first,
+  busy,
   onActivate,
   onDeactivate,
   onDelete,
@@ -175,6 +180,7 @@ function ProfileRow({
   p: Profile;
   Icon: React.ComponentType<{ className?: string }>;
   first: boolean;
+  busy: boolean;
   onActivate: () => void;
   onDeactivate: () => void;
   onDelete: () => void;
@@ -191,7 +197,12 @@ function ProfileRow({
           {PROFILE_TYPE_LABEL[p.profileType]} · {p.headline || "—"}
         </p>
       </div>
-      {p.active ? (
+      {busy ? (
+        <span className="inline-flex items-center gap-2 rounded-full border border-border px-3 py-1 text-xs text-muted-foreground">
+          <span className="h-3 w-3 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-foreground" />
+          {p.active ? "Deactivating…" : "Activating…"}
+        </span>
+      ) : p.active ? (
         <button
           onClick={onDeactivate}
           className="rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-medium text-emerald-300 hover:bg-emerald-500/25"

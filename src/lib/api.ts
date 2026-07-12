@@ -6,6 +6,8 @@ import type {
   ProfilePost,
   ProfilePostRequest,
   ProfileRequest,
+  VisitorLocation,
+  VisitorLocationRequest,
 } from "./types";
 
 const BASE_URL =
@@ -118,6 +120,17 @@ export const api = {
   // Analytics
   analyticsOverview: () =>
     request<AnalyticsOverview>("/api/analytics/overview"),
+
+  // Visitor locations (SOS)
+  recordVisitorLocation: (username: string, body: VisitorLocationRequest) =>
+    request<Profile>(
+      `/api/profiles/${encodeURIComponent(username)}/visitor-location`,
+      { method: "POST", body: JSON.stringify(body) },
+    ),
+  listVisitorLocations: (username: string) =>
+    request<VisitorLocation[]>(
+      `/api/profiles/${encodeURIComponent(username)}/visitor-locations`,
+    ),
 };
 
 export { BASE_URL };

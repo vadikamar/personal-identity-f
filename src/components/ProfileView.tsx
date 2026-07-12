@@ -1,9 +1,10 @@
 import { cn } from "@/lib/utils";
 import { profiles as mockProfiles, emergency, user as mockUser } from "@/lib/mock";
 import type { ProfileKey } from "@/lib/mock";
-import type { Profile, ProfilePost, ProfileType } from "@/lib/types";
+import type { Profile, ProfilePost, ProfileType, VisitorLocation } from "@/lib/types";
+import { api } from "@/lib/api";
 import { ProfileIcon } from "./ProfileIcon";
-import { Image as ImageIcon, X } from "lucide-react";
+import { Image as ImageIcon, MapPin, X, ExternalLink } from "lucide-react";
 import { useState, useEffect } from "react";
 
 
@@ -74,11 +75,13 @@ export function ProfileView({
   data,
   avatarUrl,
   posts,
+  handle,
 }: {
   type?: ProfileType | ProfileKey;
   data?: Profile;
   avatarUrl?: string | null;
   posts?: ProfilePost[];
+  handle?: string;
 }) {
   const activeType: ProfileType =
     (data?.profileType as ProfileType) ??
@@ -87,6 +90,50 @@ export function ProfileView({
   const t = themes[activeType];
   const isSos = activeType === "sos";
   const [activePost, setActivePost] = useState<ProfilePost | null>(null);
+  const [showLocations, setShowLocations] = useState(false);
+  const [locations, setLocations] = useState<VisitorLocation[] | null>(null);
+  const [loadingLocations, setLoadingLocations] = useState(false);
+  const [sharingLocation, setSharingLocation] = useState(false);
+  const [shareStatus, setShareStatus] = useState<
+    | { kind: "idle" }
+    | { kind: "success" }
+    | { kind: "error"; message: string }
+  >({ kind: "idle" });
+
+  const shareLocation = () => {
+    if (!handle) return;
+    if (typeof window === "undefined" || !navigator.geolocation) {
+      setShareStatus({ kind: "error", message: "Geolocation not supported on this device." });
+      return;
+    }
+    setSharingLocation(true);
+    setShareStatus({ kind: "idle" });
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        api
+          .recordVisitorLocation(handle, {
+            latitude: pos.coords.latitude,
+            longitude: pos.coords.longitude,
+          })
+          .then(() => setShareStatus({ kind: "success" }))
+          .catch(() =>
+            setShareStatus({ kind: "error", message: "Couldn't share location. Try again." }),
+          )
+          .finally(() => setSharingLocation(false));
+      },
+      (err) => {
+        setSharingLocation(false);
+        setShareStatus({
+          kind: "error",
+          message:
+            err.code === err.PERMISSION_DENIED
+              ? "Location permission denied."
+              : "Couldn't get your location.",
+        });
+      },
+      { enableHighAccuracy: false, timeout: 8000, maximumAge: 60_000 },
+    );
+  };
 
   useEffect(() => {
     if (!activePost) return;
@@ -101,6 +148,19 @@ export function ProfileView({
       document.body.style.overflow = prev;
     };
   }, [activePost]);
+
+
+
+
+  useEffect(() => {
+    if (!showLocations || !handle) return;
+    setLoadingLocations(true);
+    api
+      .listVisitorLocations(handle)
+      .then((list) => setLocations(list ?? []))
+      .catch(() => setLocations([]))
+      .finally(() => setLoadingLocations(false));
+  }, [showLocations, handle]);
 
 
   const displayName = data?.displayName ?? mockUser.name;
@@ -370,10 +430,113 @@ export function ProfileView({
               )}
             </div>
           </div>
-          <button className={cn("mt-5 w-full rounded-xl py-3 text-sm font-semibold shadow-md", t.cta)}>
-            {ctaLabel}
+          <button
+            type="button"
+            onClick={shareLocation}
+            disabled={sharingLocation || !handle}
+            className={cn(
+              "mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold shadow-md",
+              t.cta,
+              (sharingLocation || !handle) && "opacity-70 cursor-not-allowed",
+            )}
+          >
+            {sharingLocation ? (
+              <>
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+                Sharing…
+              </>
+            ) : (
+              <>
+                <MapPin className="h-4 w-4" /> Share My Location
+              </>
+            )}
+          </button>
+          {shareStatus.kind === "success" && (
+            <p className="mt-2 text-center text-xs text-emerald-600">
+              Location shared with the profile owner.
+            </p>
+          )}
+          {shareStatus.kind === "error" && (
+            <p className="mt-2 text-center text-xs text-red-600">{shareStatus.message}</p>
+          )}
+          <button
+            type="button"
+            onClick={() => setShowLocations(true)}
+            className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 py-3 text-sm font-semibold text-red-700 hover:bg-red-100"
+          >
+            <MapPin className="h-4 w-4" /> View Visitor Locations
           </button>
         </>
+      )}
+
+      {showLocations && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+          onClick={() => setShowLocations(false)}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div
+            className="relative flex max-h-[85vh] w-full max-w-md flex-col overflow-hidden rounded-2xl bg-white text-neutral-900 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-neutral-200 px-4 py-3">
+              <div className="flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-red-600" />
+                <p className="text-sm font-semibold">Visitor Locations</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowLocations(false)}
+                className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-neutral-100"
+                aria-label="Close"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="overflow-y-auto p-3">
+              {loadingLocations ? (
+                <p className="p-4 text-center text-sm text-neutral-500">Loading…</p>
+              ) : !locations || locations.length === 0 ? (
+                <p className="p-4 text-center text-sm text-neutral-500">
+                  No visitor locations recorded yet.
+                </p>
+              ) : (
+                <ul className="space-y-2">
+                  {locations.map((loc) => {
+                    const when = loc.visitedAt
+                      ? new Date(loc.visitedAt).toLocaleString()
+                      : "";
+                    const label =
+                      loc.address ||
+                      [loc.city, loc.country].filter(Boolean).join(", ") ||
+                      `${loc.latitude.toFixed(5)}, ${loc.longitude.toFixed(5)}`;
+                    const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${loc.latitude},${loc.longitude}`;
+                    return (
+                      <li key={loc.id}>
+                        <a
+                          href={mapsUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex items-start justify-between gap-2 rounded-xl border border-neutral-200 bg-white px-3 py-2.5 hover:bg-neutral-50"
+                        >
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-medium">{label}</p>
+                            <p className="text-[11px] text-neutral-500">
+                              {loc.latitude.toFixed(5)}, {loc.longitude.toFixed(5)}
+                              {when ? ` · ${when}` : ""}
+                            </p>
+                          </div>
+                          <ExternalLink className="mt-0.5 h-4 w-4 shrink-0 text-neutral-400" />
+                        </a>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
